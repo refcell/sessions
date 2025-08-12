@@ -26,7 +26,7 @@ fn count_claude_processes() -> u32 {
             .filter(|line| {
                 // Split the line into fields
                 let fields: Vec<&str> = line.split_whitespace().collect();
-                
+
                 // Check if the command (11th field, index 10) is exactly "claude"
                 // This avoids matching grep, our own hooks, etc.
                 if fields.len() > 10 {
