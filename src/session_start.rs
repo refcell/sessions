@@ -17,27 +17,27 @@ fn main() {
 /// Count the number of Claude processes currently running
 fn count_claude_processes() -> u32 {
     // Try to count Claude processes using ps
-    let output = Command::new("ps")
-        .args(&["aux"])
-        .output();
-    
+    let output = Command::new("ps").args(["aux"]).output();
+
     if let Ok(output) = output {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let count = stdout
             .lines()
             .filter(|line| {
                 // Look for Claude processes - adjust these patterns as needed
-                line.contains("claude") && 
-                (line.contains("node") || line.contains("electron") || line.contains("Claude"))
-                && !line.contains("grep")
-                && !line.contains("session-start")
-                && !line.contains("session-stop")
+                line.contains("claude")
+                    && (line.contains("node")
+                        || line.contains("electron")
+                        || line.contains("Claude"))
+                    && !line.contains("grep")
+                    && !line.contains("session-start")
+                    && !line.contains("session-stop")
             })
             .count() as u32;
-        
+
         return count;
     }
-    
+
     // If we can't count processes, return 0
     0
 }
@@ -45,7 +45,7 @@ fn count_claude_processes() -> u32 {
 fn run() -> Result<()> {
     // Count actual Claude processes
     let actual_processes = count_claude_processes();
-    
+
     // Atomically update the session count
     let config = update_config(|config| {
         // If actual process count differs significantly from stored count, sync it
@@ -94,7 +94,7 @@ mod tests {
         // The command should execute (whether it succeeds or fails is not critical for compilation test)
         assert!(output.is_ok());
     }
-    
+
     #[test]
     fn test_count_claude_processes() {
         // This will return 0 or more depending on whether Claude is running
