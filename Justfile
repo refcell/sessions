@@ -48,10 +48,10 @@ uninstall:
     #!/bin/bash
     set -e
     HOOKS_DIR="$HOME/.claude/hooks"
-    echo "🗑️  Uninstalling session-count hooks..."
+    echo "🗑️  Uninstalling sessions hooks..."
     rm -f "$HOOKS_DIR/session-start-hook" "$HOOKS_DIR/stop-hook"
     echo "✅ Hooks uninstalled"
-    echo "ℹ️  Config file preserved at ~/.session-count.json"
+    echo "ℹ️  Config file preserved at ~/.sessions.json"
 
 # Test installed hooks
 test-hooks:
@@ -102,8 +102,8 @@ deploy:
 # Show current session count
 status:
     #!/bin/bash
-    if [ -f "$HOME/.session-count.json" ]; then
-        cat "$HOME/.session-count.json" | jq .
+    if [ -f "$HOME/.sessions.json" ]; then
+        cat "$HOME/.sessions.json" | jq .
     else
         echo "No session count file found"
     fi
@@ -112,7 +112,7 @@ status:
 reset:
     #!/bin/bash
     set -e
-    rm -f "$HOME/.session-count.json"
+    rm -f "$HOME/.sessions.json"
     echo "✅ Session count reset"
 
 # Run all CI checks locally

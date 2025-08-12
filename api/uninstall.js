@@ -2,42 +2,42 @@ export default function handler(req, res) {
   const script = `#!/bin/bash
 set -e
 
-echo "🗑️  Uninstalling session-count hooks..."
+echo "🗑️  Uninstalling sessions hooks..."
 
 HOOKS_DIR="$HOME/.claude/hooks"
-CONFIG_FILE="$HOME/.session-count.json"
+CONFIG_FILE="$HOME/.sessions.json"
 
 # Remove hook files
 REMOVED=0
 
 if [ -f "$HOOKS_DIR/session-start-hook" ]; then
-  # Check if it's our session-count hook
+  # Check if it's our sessions hook
   if file "$HOOKS_DIR/session-start-hook" | grep -q "ELF\\|Mach-O" || 
-     strings "$HOOKS_DIR/session-start-hook" 2>/dev/null | grep -q "session-count"; then
+     strings "$HOOKS_DIR/session-start-hook" 2>/dev/null | grep -q "sessions"; then
     rm -f "$HOOKS_DIR/session-start-hook"
     echo "✅ Removed session-start-hook"
     REMOVED=$((REMOVED + 1))
   else
-    echo "⚠️  session-start-hook exists but doesn't appear to be session-count. Skipping."
+    echo "⚠️  session-start-hook exists but doesn't appear to be sessions. Skipping."
   fi
 fi
 
 if [ -f "$HOOKS_DIR/stop-hook" ]; then
-  # Check if it's our session-count hook  
+  # Check if it's our sessions hook  
   if file "$HOOKS_DIR/stop-hook" | grep -q "ELF\\|Mach-O" ||
-     strings "$HOOKS_DIR/stop-hook" 2>/dev/null | grep -q "session-count"; then
+     strings "$HOOKS_DIR/stop-hook" 2>/dev/null | grep -q "sessions"; then
     rm -f "$HOOKS_DIR/stop-hook"
     echo "✅ Removed stop-hook"
     REMOVED=$((REMOVED + 1))
   else
-    echo "⚠️  stop-hook exists but doesn't appear to be session-count. Skipping."
+    echo "⚠️  stop-hook exists but doesn't appear to be sessions. Skipping."
   fi
 fi
 
 # Ask about removing config file
 if [ -f "$CONFIG_FILE" ]; then
   echo ""
-  read -p "Remove session count data file (~/.session-count.json)? [y/N] " -n 1 -r
+  read -p "Remove session count data file (~/.sessions.json)? [y/N] " -n 1 -r
   echo ""
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm -f "$CONFIG_FILE"
@@ -48,7 +48,7 @@ if [ -f "$CONFIG_FILE" ]; then
 fi
 
 if [ $REMOVED -eq 0 ]; then
-  echo "ℹ️  No session-count hooks found to remove"
+  echo "ℹ️  No sessions hooks found to remove"
 else
   echo ""
   echo "✅ Session-count hooks uninstalled successfully!"
@@ -56,7 +56,7 @@ fi
 
 echo ""
 echo "To reinstall, run:"
-echo "  curl -sSL session-count.refcell.org/install | bash"
+echo "  curl -sSL sessions.refcell.org/install | bash"
 `;
 
   res.setHeader('Content-Type', 'text/plain');

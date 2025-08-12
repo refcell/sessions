@@ -1,5 +1,5 @@
 {
-  "name": "session-count",
+  "name": "sessions",
   "version": "0.1.0",
   "description": "Session counter hook for Claude Code",
   "private": true,
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/refcell/session-count.git"
+    "url": "https://github.com/refcell/sessions.git"
   },
   "author": "Andreas Bigger",
   "license": "MIT"

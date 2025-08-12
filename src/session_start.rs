@@ -4,7 +4,7 @@
 //! number of active sessions.
 
 use anyhow::{Context, Result};
-use session_count::update_config;
+use sessions::update_config;
 use std::process;
 
 fn main() {

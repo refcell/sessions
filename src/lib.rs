@@ -65,7 +65,7 @@ impl SessionConfig {
 /// Get the path to the session count configuration file
 pub fn get_config_path() -> Result<PathBuf> {
     let home_dir = dirs::home_dir().context("Failed to get home directory")?;
-    Ok(home_dir.join(".session-count.json"))
+    Ok(home_dir.join(".sessions.json"))
 }
 
 /// Read the session configuration from file with file locking
@@ -215,7 +215,7 @@ mod tests {
 
     #[allow(dead_code)] // Helper function for potential future tests
     fn setup_test_config_path(temp_dir: &TempDir) -> PathBuf {
-        temp_dir.path().join(".session-count.json")
+        temp_dir.path().join(".sessions.json")
     }
 
     #[test]

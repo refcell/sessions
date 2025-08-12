@@ -2,7 +2,7 @@ export default function handler(req, res) {
   const script = `#!/bin/bash
 set -e
 
-echo "📊 Installing session-count hooks for Claude Code..."
+echo "📊 Installing sessions hooks for Claude Code..."
 
 # Check if Claude Code is installed
 if [ ! -d "$HOME/.claude" ]; then
@@ -39,15 +39,15 @@ trap "rm -rf $TEMP_DIR" EXIT
 cd "$TEMP_DIR"
 
 # Get latest release
-echo "⬇️  Downloading session-count for $PLATFORM..."
-LATEST_RELEASE=$(curl -s https://api.github.com/repos/refcell/session-count/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+echo "⬇️  Downloading sessions for $PLATFORM..."
+LATEST_RELEASE=$(curl -s https://api.github.com/repos/refcell/sessions/releases/latest | grep "tag_name" | cut -d '"' -f 4)
 
 if [ -z "$LATEST_RELEASE" ]; then
   echo "❌ Could not fetch latest release. Building from source..."
   
   # Clone and build from source
-  git clone https://github.com/refcell/session-count.git
-  cd session-count
+  git clone https://github.com/refcell/sessions.git
+  cd sessions
   
   if ! command -v cargo &> /dev/null; then
     echo "❌ Rust/Cargo not found. Please install Rust first:"
@@ -57,12 +57,12 @@ if [ -z "$LATEST_RELEASE" ]; then
   
   cargo build --release
   cd ..
-  cp session-count/target/release/session-start .
-  cp session-count/target/release/session-stop .
+  cp sessions/target/release/session-start .
+  cp sessions/target/release/session-stop .
 else
-  DOWNLOAD_URL="https://github.com/refcell/session-count/releases/download/\${LATEST_RELEASE}/session-count-\${PLATFORM}.tar.gz"
+  DOWNLOAD_URL="https://github.com/refcell/sessions/releases/download/\${LATEST_RELEASE}/sessions-\${PLATFORM}.tar.gz"
   
-  if ! curl -L -f -o session-count.tar.gz "$DOWNLOAD_URL" 2>/dev/null; then
+  if ! curl -L -f -o sessions.tar.gz "$DOWNLOAD_URL" 2>/dev/null; then
     echo "⚠️  Pre-built binary not available. Building from source..."
     
     # Clone and build from source
@@ -80,7 +80,7 @@ else
     cp session-count/target/release/session-start .
     cp session-count/target/release/session-stop .
   else
-    tar xzf session-count.tar.gz
+    tar xzf sessions.tar.gz
   fi
 fi
 
@@ -98,10 +98,10 @@ echo "🧪 Testing installation..."
 if "$HOOKS_DIR/session-start-hook" >/dev/null 2>&1; then
   echo "✅ Session-count hooks installed successfully!"
   echo ""
-  echo "📊 Hooks are now tracking active sessions in ~/.session-count.json"
+  echo "📊 Hooks are now tracking active sessions in ~/.sessions.json"
   echo ""
   echo "To uninstall, run:"
-  echo "  curl -sSL session-count.refcell.org/uninstall | bash"
+  echo "  curl -sSL sessions.refcell.org/uninstall | bash"
 else
   echo "⚠️  Installation completed but test failed. Please check the hooks manually."
 fi

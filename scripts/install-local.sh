@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "📊 Installing session-count hooks locally..."
+echo "📊 Installing sessions hooks locally..."
 
 # Check if binaries exist
 if [ ! -f "target/release/session-start" ] || [ ! -f "target/release/session-stop" ]; then
@@ -36,4 +36,4 @@ fi
 
 echo ""
 echo "Hooks installed in: $HOOKS_DIR"
-echo "Config file: ~/.session-count.json"
+echo "Config file: ~/.sessions.json"

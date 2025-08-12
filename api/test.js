@@ -2,11 +2,11 @@ export default function handler(req, res) {
   const script = `#!/bin/bash
 set -e
 
-echo "🧪 Testing session-count hooks..."
+echo "🧪 Testing sessions hooks..."
 echo ""
 
 HOOKS_DIR="$HOME/.claude/hooks"
-CONFIG_FILE="$HOME/.session-count.json"
+CONFIG_FILE="$HOME/.sessions.json"
 ERRORS=0
 
 # Check if hooks are installed
@@ -142,7 +142,7 @@ else
   echo "❌ $ERRORS test(s) failed"
   echo ""
   echo "To reinstall, run:"
-  echo "  curl -sSL session-count.refcell.org/install | bash"
+  echo "  curl -sSL sessions.refcell.org/install | bash"
 fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━"
 `;

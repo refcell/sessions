@@ -1,11 +1,11 @@
 [package]
-name = "session-count"
+name = "sessions"
 version = "0.1.0"
 edition = "2021"
 authors = ["Andreas Bigger <andreas@abigger.io>"]
 description = "Session counter hook for Claude Code"
 license = "MIT"
-repository = "https://github.com/andreasbigger/session-count"
+repository = "https://github.com/refcell/sessions"
 
 [[bin]]
 name = "session-start"

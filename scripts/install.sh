@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Installing session-count hooks for Claude Code..."
+echo "Installing sessions hooks for Claude Code..."
 
 # Detect OS and architecture
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -25,8 +25,8 @@ case "$OS" in
 esac
 
 # Download latest release
-LATEST_RELEASE=$(curl -s https://api.github.com/repos/andreasbigger/session-count/releases/latest | grep "tag_name" | cut -d '"' -f 4)
-DOWNLOAD_URL="https://github.com/andreasbigger/session-count/releases/download/${LATEST_RELEASE}/session-count-${PLATFORM}.tar.gz"
+LATEST_RELEASE=$(curl -s https://api.github.com/repos/refcell/sessions/releases/latest | grep "tag_name" | cut -d '"' -f 4)
+DOWNLOAD_URL="https://github.com/refcell/sessions/releases/download/${LATEST_RELEASE}/sessions-${PLATFORM}.tar.gz"
 
 echo "Downloading from: $DOWNLOAD_URL"
 
@@ -35,8 +35,8 @@ TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR"
 
 # Download and extract
-curl -L -o session-count.tar.gz "$DOWNLOAD_URL"
-tar xzf session-count.tar.gz
+curl -L -o sessions.tar.gz "$DOWNLOAD_URL"
+tar xzf sessions.tar.gz
 
 # Install hooks
 HOOKS_DIR="$HOME/.claude/hooks"
@@ -50,5 +50,5 @@ chmod +x "$HOOKS_DIR"/*
 cd -
 rm -rf "$TEMP_DIR"
 
-echo "✅ Session-count hooks installed successfully!"
-echo "📊 Hooks will track active sessions in ~/.session-count.json"
+echo "✅ Sessions hooks installed successfully!"
+echo "📊 Hooks will track active sessions in ~/.sessions.json"

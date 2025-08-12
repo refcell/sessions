@@ -45,11 +45,11 @@ jobs:
           cp target/${{ matrix.target }}/release/session-start dist/
           cp target/${{ matrix.target }}/release/session-stop dist/
           cp README.md LICENSE dist/
-          tar czf session-count-${{ matrix.target }}.${{ matrix.archive }} -C dist .
+          tar czf sessions-${{ matrix.target }}.${{ matrix.archive }} -C dist .
       
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: session-count-${{ matrix.target }}.${{ matrix.archive }}
+          files: sessions-${{ matrix.target }}.${{ matrix.archive }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

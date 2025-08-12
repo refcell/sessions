@@ -1,4 +1,4 @@
-# session-count
+# sessions
 
 A minimal session counter hook for Claude Code that tracks active sessions.
 
@@ -7,19 +7,19 @@ A minimal session counter hook for Claude Code that tracks active sessions.
 - 📊 Displays active session count on startup
 - 🔒 Thread-safe concurrent access handling  
 - 🦀 Written in Rust for performance and reliability
-- 📁 Stores count in `~/.session-count.json`
+- 📁 Stores count in `~/.sessions.json`
 
 ## Quick Install
 
 ```bash
 # Install with one command
-curl -sSL session-count.refcell.org/install | bash
+curl -sSL sessions.refcell.org/install | bash
 
 # Test installation
-curl -sSL session-count.refcell.org/test | bash
+curl -sSL sessions.refcell.org/test | bash
 
 # Uninstall
-curl -sSL session-count.refcell.org/uninstall | bash
+curl -sSL sessions.refcell.org/uninstall | bash
 ```
 
 ## Manual Installation
@@ -95,7 +95,7 @@ just deploy
 
 ## Configuration
 
-Session data stored in `~/.session-count.json`:
+Session data stored in `~/.sessions.json`:
 ```json
 {
   "count": 0,
