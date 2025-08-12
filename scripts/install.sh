@@ -38,13 +38,51 @@ cd "$TEMP_DIR"
 curl -L -o sessions.tar.gz "$DOWNLOAD_URL"
 tar xzf sessions.tar.gz
 
-# Install hooks
+# Install hooks to temporary location first
+TEMP_HOOKS_DIR="$TEMP_DIR/hooks"
+mkdir -p "$TEMP_HOOKS_DIR"
+cp session-start "$TEMP_HOOKS_DIR/session-start-hook"
+cp session-stop "$TEMP_HOOKS_DIR/stop-hook"
+chmod +x "$TEMP_HOOKS_DIR"/*
+
+# Update Claude settings file
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+mkdir -p "$(dirname "$CLAUDE_SETTINGS")"
+
+# Check if settings file exists and has content
+if [ -f "$CLAUDE_SETTINGS" ] && [ -s "$CLAUDE_SETTINGS" ]; then
+    # Backup existing settings
+    cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
+    
+    # Update settings with new hooks
+    jq --arg start "$TEMP_HOOKS_DIR/session-start-hook" \
+       --arg stop "$TEMP_HOOKS_DIR/stop-hook" \
+       '.hooks["session-start-hook"] = $start | .hooks["stop-hook"] = $stop' \
+       "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
+    mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+else
+    # Create new settings file with hooks
+    cat > "$CLAUDE_SETTINGS" <<EOF
+{
+  "hooks": {
+    "session-start-hook": "$TEMP_HOOKS_DIR/session-start-hook",
+    "stop-hook": "$TEMP_HOOKS_DIR/stop-hook"
+  }
+}
+EOF
+fi
+
+# Now copy hooks to their final location
 HOOKS_DIR="$HOME/.claude/hooks"
 mkdir -p "$HOOKS_DIR"
+cp "$TEMP_HOOKS_DIR"/* "$HOOKS_DIR/"
 
-cp session-start "$HOOKS_DIR/session-start-hook"
-cp session-stop "$HOOKS_DIR/stop-hook"
-chmod +x "$HOOKS_DIR"/*
+# Update settings file with final paths
+jq --arg start "$HOOKS_DIR/session-start-hook" \
+   --arg stop "$HOOKS_DIR/stop-hook" \
+   '.hooks["session-start-hook"] = $start | .hooks["stop-hook"] = $stop' \
+   "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
+mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
 
 # Clean up
 cd -
@@ -52,3 +90,4 @@ rm -rf "$TEMP_DIR"
 
 echo "✅ Sessions hooks installed successfully!"
 echo "📊 Hooks will track active sessions in ~/.sessions.json"
+echo "📝 Claude settings updated at: $CLAUDE_SETTINGS"

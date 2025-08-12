@@ -93,12 +93,43 @@ cp session-start "$HOOKS_DIR/session-start-hook"
 cp session-stop "$HOOKS_DIR/stop-hook"
 chmod +x "$HOOKS_DIR/session-start-hook" "$HOOKS_DIR/stop-hook"
 
+# Update Claude settings file
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+echo "📝 Updating Claude settings..."
+
+if command -v jq &> /dev/null; then
+  if [ -f "$CLAUDE_SETTINGS" ] && [ -s "$CLAUDE_SETTINGS" ]; then
+    # Backup existing settings
+    cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
+    
+    # Update settings with new hooks
+    jq --arg start "$HOOKS_DIR/session-start-hook" \
+       --arg stop "$HOOKS_DIR/stop-hook" \
+       '.hooks["session-start-hook"] = $start | .hooks["stop-hook"] = $stop' \
+       "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
+    mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+  else
+    # Create new settings file with hooks
+    cat > "$CLAUDE_SETTINGS" <<EOF
+{
+  "hooks": {
+    "session-start-hook": "$HOOKS_DIR/session-start-hook",
+    "stop-hook": "$HOOKS_DIR/stop-hook"
+  }
+}
+EOF
+  fi
+else
+  echo "⚠️  jq not found. Please manually add hooks to $CLAUDE_SETTINGS"
+fi
+
 # Test installation
 echo "🧪 Testing installation..."
 if "$HOOKS_DIR/session-start-hook" >/dev/null 2>&1; then
   echo "✅ Session-count hooks installed successfully!"
   echo ""
   echo "📊 Hooks are now tracking active sessions in ~/.sessions.json"
+  echo "📝 Claude settings updated at: $CLAUDE_SETTINGS"
   echo ""
   echo "To uninstall, run:"
   echo "  curl -sSL sessions.refcell.org/uninstall | bash"

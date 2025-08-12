@@ -6,6 +6,26 @@ echo "🗑️  Uninstalling sessions hooks..."
 
 HOOKS_DIR="$HOME/.claude/hooks"
 CONFIG_FILE="$HOME/.sessions.json"
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+
+# Remove hooks from Claude settings
+if [ -f "$CLAUDE_SETTINGS" ]; then
+  echo "📝 Updating Claude settings..."
+  if command -v jq &> /dev/null; then
+    # Remove hooks from settings
+    jq 'del(.hooks["session-start-hook"]) | del(.hooks["stop-hook"])' \
+       "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
+    
+    # Check if hooks object is empty and remove it if so
+    jq 'if .hooks == {} then del(.hooks) else . end' \
+       "$CLAUDE_SETTINGS.tmp" > "$CLAUDE_SETTINGS"
+    
+    rm -f "$CLAUDE_SETTINGS.tmp"
+    echo "✅ Removed hooks from Claude settings"
+  else
+    echo "⚠️  jq not found. Please manually remove hooks from $CLAUDE_SETTINGS"
+  fi
+fi
 
 # Remove hook files
 REMOVED=0

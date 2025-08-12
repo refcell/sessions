@@ -1,15 +1,14 @@
-export default function handler(req, res) {
-  const script = `#!/bin/bash
+#!/bin/bash
 set -e
 
-echo "🧪 Testing sessions hooks for Claude Code..."
+echo "Testing sessions hooks for Claude Code..."
 echo ""
 
-# Colors for output (may not work in all terminals)
-GREEN='\\033[0;32m'
-RED='\\033[0;31m'
-YELLOW='\\033[1;33m'
-NC='\\033[0m' # No Color
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
 # Test counter
 TESTS_PASSED=0
@@ -25,18 +24,18 @@ run_test() {
     
     if eval "$test_command"; then
         if [ "$expected_result" = "pass" ]; then
-            echo -e "\${GREEN}✓\${NC}"
+            echo -e "${GREEN}✓${NC}"
             ((TESTS_PASSED++))
         else
-            echo -e "\${RED}✗ (expected to fail but passed)\${NC}"
+            echo -e "${RED}✗ (expected to fail but passed)${NC}"
             ((TESTS_FAILED++))
         fi
     else
         if [ "$expected_result" = "fail" ]; then
-            echo -e "\${GREEN}✓ (correctly failed)\${NC}"
+            echo -e "${GREEN}✓ (correctly failed)${NC}"
             ((TESTS_PASSED++))
         else
-            echo -e "\${RED}✗\${NC}"
+            echo -e "${RED}✗${NC}"
             ((TESTS_FAILED++))
         fi
     fi
@@ -56,16 +55,16 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 run_test "Claude settings file exists" "[ -f '$CLAUDE_SETTINGS' ]" "pass"
 
 if [ -f "$CLAUDE_SETTINGS" ] && command -v jq &> /dev/null; then
-    run_test "Settings contains session-start-hook" \\
-        "jq -e '.hooks[\\"session-start-hook\\"]' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
-    run_test "Settings contains stop-hook" \\
-        "jq -e '.hooks[\\"stop-hook\\"]' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
-    run_test "Session-start-hook path is correct" \\
-        "[ \\"\\$(jq -r '.hooks[\\"session-start-hook\\"]' '$CLAUDE_SETTINGS')\\" = '$HOME/.claude/hooks/session-start-hook' ]" "pass"
-    run_test "Stop-hook path is correct" \\
-        "[ \\"\\$(jq -r '.hooks[\\"stop-hook\\"]' '$CLAUDE_SETTINGS')\\" = '$HOME/.claude/hooks/stop-hook' ]" "pass"
+    run_test "Settings contains session-start-hook" \
+        "jq -e '.hooks[\"session-start-hook\"]' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
+    run_test "Settings contains stop-hook" \
+        "jq -e '.hooks[\"stop-hook\"]' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
+    run_test "Session-start-hook path is correct" \
+        "[ \"\$(jq -r '.hooks[\"session-start-hook\"]' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/session-start-hook' ]" "pass"
+    run_test "Stop-hook path is correct" \
+        "[ \"\$(jq -r '.hooks[\"stop-hook\"]' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/stop-hook' ]" "pass"
 else
-    echo -e "\${YELLOW}⚠ Skipping settings content tests (jq not found or settings file missing)\${NC}"
+    echo -e "${YELLOW}⚠ Skipping settings content tests (jq not found or settings file missing)${NC}"
 fi
 
 # Test hook functionality
@@ -85,15 +84,15 @@ echo "{}" > "$SESSIONS_FILE"  # Start with empty sessions
 "$HOME/.claude/hooks/session-start-hook" 2>/dev/null || true
 
 if [ -f "$SESSIONS_FILE" ] && command -v jq &> /dev/null; then
-    SESSION_COUNT=\\$(jq -r '.session_count // 0' "$SESSIONS_FILE" 2>/dev/null || echo "0")
+    SESSION_COUNT=$(jq -r '.session_count // 0' "$SESSIONS_FILE" 2>/dev/null || echo "0")
     run_test "Session start hook increments counter" "[ '$SESSION_COUNT' -ge 1 ]" "pass"
     
     # Test stop hook
     "$HOME/.claude/hooks/stop-hook" 2>/dev/null || true
-    ACTIVE_AFTER_STOP=\\$(jq -r '.active_sessions // 0' "$SESSIONS_FILE" 2>/dev/null || echo "0")
+    ACTIVE_AFTER_STOP=$(jq -r '.active_sessions // 0' "$SESSIONS_FILE" 2>/dev/null || echo "0")
     run_test "Stop hook decrements active sessions" "[ '$ACTIVE_AFTER_STOP' -eq 0 ]" "pass"
 else
-    echo -e "\${YELLOW}⚠ Skipping functionality tests (jq not found or sessions file missing)\${NC}"
+    echo -e "${YELLOW}⚠ Skipping functionality tests (jq not found or sessions file missing)${NC}"
 fi
 
 # Restore backup if it existed
@@ -104,28 +103,18 @@ fi
 # Print summary
 echo ""
 echo "=== Test Summary ==="
-echo -e "Tests passed: \${GREEN}$TESTS_PASSED\${NC}"
+echo -e "Tests passed: ${GREEN}$TESTS_PASSED${NC}"
 if [ $TESTS_FAILED -gt 0 ]; then
-    echo -e "Tests failed: \${RED}$TESTS_FAILED\${NC}"
+    echo -e "Tests failed: ${RED}$TESTS_FAILED${NC}"
 else
     echo -e "Tests failed: $TESTS_FAILED"
 fi
 
 echo ""
 if [ $TESTS_FAILED -eq 0 ]; then
-    echo -e "\${GREEN}✅ All tests passed!\${NC}"
-    echo ""
-    echo "Your sessions hooks are working correctly!"
+    echo -e "${GREEN}✅ All tests passed!${NC}"
     exit 0
 else
-    echo -e "\${RED}❌ Some tests failed\${NC}"
-    echo ""
-    echo "To reinstall, run:"
-    echo "  curl -sSL sessions.refcell.org/install | bash"
+    echo -e "${RED}❌ Some tests failed${NC}"
     exit 1
 fi
-`;
-
-  res.setHeader('Content-Type', 'text/plain');
-  res.status(200).send(script);
-}
