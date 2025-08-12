@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>session-count - Claude Code Session Counter</title>
+    <meta name="description" content="A minimal session counter hook for Claude Code that tracks active sessions">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 48px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 32px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 32px 0;
+        }
+        
+        .feature {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .feature-icon {
+            font-size: 1.5em;
+            margin-bottom: 8px;
+        }
+        
+        .commands {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 24px;
+            border-radius: 8px;
+            margin: 24px 0;
+        }
+        
+        .command-group {
+            margin-bottom: 20px;
+        }
+        
+        .command-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .command-label {
+            color: #9ca3af;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .command {
+            background: #2d2d2d;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.95em;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .command:hover {
+            background: #3d3d3d;
+        }
+        
+        .command::after {
+            content: '📋';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            font-size: 0.9em;
+        }
+        
+        .links {
+            display: flex;
+            gap: 24px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+        }
+        
+        .link:hover {
+            color: #764ba2;
+        }
+        
+        .footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 session-count</h1>
+        <p class="subtitle">A minimal session counter hook for Claude Code</p>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <strong>Session Tracking</strong>
+                <p>Displays active session count on startup</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <strong>Thread-Safe</strong>
+                <p>Handles concurrent access safely</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🦀</div>
+                <strong>Rust Powered</strong>
+                <p>Fast and reliable performance</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🚀</div>
+                <strong>Easy Install</strong>
+                <p>One-line installation script</p>
+            </div>
+        </div>
+        
+        <div class="commands">
+            <div class="command-group">
+                <div class="command-label">Install</div>
+                <div class="command" onclick="copyCommand(this)">curl -sSL session-count.refcell.org/install | bash</div>
+            </div>
+            
+            <div class="command-group">
+                <div class="command-label">Test</div>
+                <div class="command" onclick="copyCommand(this)">curl -sSL session-count.refcell.org/test | bash</div>
+            </div>
+            
+            <div class="command-group">
+                <div class="command-label">Uninstall</div>
+                <div class="command" onclick="copyCommand(this)">curl -sSL session-count.refcell.org/uninstall | bash</div>
+            </div>
+        </div>
+        
+        <h3>How it works</h3>
+        <p>Session-count hooks integrate with Claude Code to track the number of active sessions. When you start a new Claude Code session, you'll see the current session count. The counter is stored in <code>~/.session-count.json</code> and automatically managed.</p>
+        
+        <div class="links">
+            <a href="https://github.com/refcell/session-count" class="link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                GitHub
+            </a>
+            <a href="https://github.com/refcell/session-count/issues" class="link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Report Issue
+            </a>
+            <a href="https://claude.ai/code" class="link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Claude Code
+            </a>
+        </div>
+        
+        <div class="footer">
+            Made with 🦀 by <a href="https://github.com/andreasbigger" style="color: inherit;">Andreas Bigger</a>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">Command copied to clipboard!</div>
+    
+    <script>
+        function copyCommand(element) {
+            const command = element.textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
