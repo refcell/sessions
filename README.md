@@ -25,14 +25,14 @@ curl -sSL session-count.refcell.org/uninstall | bash
 ## Manual Installation
 
 ```bash
-# Build from source
-cargo build --release
+# Prerequisites: Rust and Just
+# Install Just: cargo install just
 
-# Install hooks
-mkdir -p ~/.claude/hooks
-cp target/release/session-start ~/.claude/hooks/session-start-hook
-cp target/release/session-stop ~/.claude/hooks/stop-hook
-chmod +x ~/.claude/hooks/*
+# Build and install locally
+just install
+
+# Or if you don't have Just:
+./scripts/install-local.sh
 ```
 
 ## Usage
@@ -43,18 +43,54 @@ Once installed, the hooks run automatically:
 
 ## Development
 
+Requires [Just](https://github.com/casey/just) command runner:
+
 ```bash
+# Show available commands
+just
+
+# Build release version
+just build
+
 # Run tests
-cargo test
+just test
 
-# Build
-cargo build --release
+# Format code
+just fmt
 
-# Format
-cargo fmt
+# Run linter
+just lint
 
-# Lint
-cargo clippy -- -D warnings
+# Run all checks (format, lint, test)
+just check
+
+# Install hooks locally
+just install
+
+# Test installed hooks
+just test-hooks
+
+# Show current session count
+just status
+
+# Reset session count
+just reset
+```
+
+### Common Tasks
+
+```bash
+# Run specific test
+just test-filter test_name
+
+# Clean build artifacts
+just clean
+
+# Create a new release
+just release 0.2.0
+
+# Deploy to Vercel
+just deploy
 ```
 
 ## Configuration

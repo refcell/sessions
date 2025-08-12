@@ -27,6 +27,9 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: rustfmt, clippy
       
+      - name: Install Just
+        uses: extractions/setup-just@v2
+      
       - name: Cache cargo
         uses: actions/cache@v3
         with:
@@ -37,21 +40,21 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       
       - name: Check formatting
-        run: cargo fmt -- --check
+        run: just fmt-check
         
       - name: Run clippy
-        run: cargo clippy -- -D warnings
+        run: just lint
       
       - name: Build
-        run: cargo build --release --verbose
+        run: just build
       
       - name: Run tests
-        run: cargo test --verbose
+        run: just test
       
       - name: Test binaries
         run: |
-          ./target/release/session-start
-          ./target/release/session-stop
+          just run-start
+          just run-stop
 
   security:
     name: Security Audit

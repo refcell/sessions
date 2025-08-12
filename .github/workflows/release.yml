@@ -33,6 +33,9 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       
+      - name: Install Just
+        uses: extractions/setup-just@v2
+      
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
       
