@@ -3,8 +3,9 @@
 > Lightweight session counter for Claude Code
 
 [![Crates.io](https://img.shields.io/crates/v/sessions-cli.svg)](https://crates.io/crates/sessions-cli)
-[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=flat&logo=rust&logoColor=white)](https://www.rust-lang.org)
+[![CI](https://github.com/refcell/sessions/actions/workflows/ci.yml/badge.svg)](https://github.com/refcell/sessions/actions/workflows/ci.yml)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=flat&logo=rust&logoColor=white)](https://www.rust-lang.org)
 
 ## Install
 
