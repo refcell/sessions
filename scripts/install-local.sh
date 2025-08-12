@@ -100,9 +100,9 @@ add_session_hook "Stop" "" "$HOOKS_DIR/sessions-hook-stop"
 # Test installation
 echo "🧪 Testing installation..."
 if "$HOOKS_DIR/sessions-hook-start" >/dev/null 2>&1; then
-    OUTPUT=$("$HOOKS_DIR/sessions-hook-start" 2>&1)
     echo "✅ Installation successful!"
-    echo "   $OUTPUT"
+    # Run the hook to show its output (preserves formatting)
+    "$HOOKS_DIR/sessions-hook-start" 2>&1
 else
     echo "⚠️  Installation completed but test failed."
 fi
