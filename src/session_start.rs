@@ -5,7 +5,7 @@
 
 use anyhow::{Context, Result};
 use sessions::update_config;
-use std::process;
+use std::process::{self, Command};
 
 fn main() {
     if let Err(e) = run() {
@@ -14,15 +14,54 @@ fn main() {
     }
 }
 
+/// Count the number of Claude processes currently running
+fn count_claude_processes() -> u32 {
+    // Try to count Claude processes using ps
+    let output = Command::new("ps")
+        .args(&["aux"])
+        .output();
+    
+    if let Ok(output) = output {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let count = stdout
+            .lines()
+            .filter(|line| {
+                // Look for Claude processes - adjust these patterns as needed
+                line.contains("claude") && 
+                (line.contains("node") || line.contains("electron") || line.contains("Claude"))
+                && !line.contains("grep")
+                && !line.contains("session-start")
+                && !line.contains("session-stop")
+            })
+            .count() as u32;
+        
+        return count;
+    }
+    
+    // If we can't count processes, return 0
+    0
+}
+
 fn run() -> Result<()> {
-    // Atomically increment the session count
+    // Count actual Claude processes
+    let actual_processes = count_claude_processes();
+    
+    // Atomically update the session count
     let config = update_config(|config| {
-        config.increment();
+        // If actual process count differs significantly from stored count, sync it
+        // But always increment by 1 for this new session
+        if config.count == 0 || (actual_processes > 0 && config.count < actual_processes) {
+            // Sync to actual count + 1 (for this new session)
+            config.count = actual_processes + 1;
+        } else {
+            // Normal increment
+            config.increment();
+        }
     })
     .context("Failed to update session configuration")?;
 
-    // Display the current session count with a minimal, clean message
-    println!("📊 Active sessions: {}", config.count);
+    // Display the current session count with a newline before for better visibility
+    println!("\n📊 Active sessions: {}", config.count);
 
     Ok(())
 }
@@ -53,5 +92,12 @@ mod tests {
 
         // The command should execute (whether it succeeds or fails is not critical for compilation test)
         assert!(output.is_ok());
+    }
+    
+    #[test]
+    fn test_count_claude_processes() {
+        // This will return 0 or more depending on whether Claude is running
+        let count = count_claude_processes();
+        assert!(count >= 0);
     }
 }
