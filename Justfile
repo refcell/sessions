@@ -45,13 +45,7 @@ install: build
 
 # Uninstall hooks
 uninstall:
-    #!/bin/bash
-    set -e
-    HOOKS_DIR="$HOME/.claude/hooks"
-    echo "🗑️  Uninstalling sessions hooks..."
-    rm -f "$HOOKS_DIR/session-start-hook" "$HOOKS_DIR/stop-hook"
-    echo "✅ Hooks uninstalled"
-    echo "ℹ️  Config file preserved at ~/.sessions.json"
+    ./scripts/uninstall.sh
 
 # Test installed hooks
 test-hooks:
