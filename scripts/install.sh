@@ -59,58 +59,64 @@ fi
 
 # Initialize settings file if it doesn't exist
 if [ ! -f "$CLAUDE_SETTINGS" ] || [ ! -s "$CLAUDE_SETTINGS" ]; then
-    echo "{\"hooks\": {}}" > "$CLAUDE_SETTINGS"
+    echo '{"hooks": {}}' > "$CLAUDE_SETTINGS"
 fi
 
 # Backup existing settings
 cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
+echo "📝 Backed up settings to $CLAUDE_SETTINGS.backup"
 
-# Function to add a hook entry (appends to existing hooks)
-add_hook_entry() {
+# Function to add a hook to a specific event and matcher
+add_session_hook() {
     local event="$1"
     local matcher="$2"
     local command="$3"
     
-    # Add hook to the appropriate event and matcher
-    jq --arg event "$event" \
-       --arg matcher "$matcher" \
-       --arg command "$command" \
-       '
-       # Ensure hooks object exists
-       .hooks = (.hooks // {}) |
-       
-       # Ensure event array exists
-       .hooks[$event] = (.hooks[$event] // []) |
-       
-       # Find existing matcher entry or create new one
-       (.hooks[$event] | map(.matcher) | index($matcher)) as $idx |
-       if $idx != null then
-         # Matcher exists, append to its hooks if not already present
-         .hooks[$event][$idx].hooks = (
-           .hooks[$event][$idx].hooks | 
-           if map(.command) | index($command) == null then
-             . + [{"type": "command", "command": $command}]
-           else . end
-         )
-       else
-         # Matcher doesn\'t exist, add new entry
-         .hooks[$event] += [{
-           "matcher": $matcher,
-           "hooks": [{"type": "command", "command": $command}]
-         }]
-       end
-       ' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+    # Read current settings, modify, and write back
+    CURRENT=$(cat "$CLAUDE_SETTINGS")
+    UPDATED=$(echo "$CURRENT" | jq \
+        --arg event "$event" \
+        --arg matcher "$matcher" \
+        --arg command "$command" \
+        '
+        # Ensure hooks object exists
+        .hooks = (.hooks // {}) |
+        
+        # Ensure event array exists
+        .hooks[$event] = (.hooks[$event] // []) |
+        
+        # Find if matcher already exists
+        .hooks[$event] as $eventHooks |
+        ($eventHooks | map(.matcher == $matcher) | index(true)) as $index |
+        
+        # Update or add the matcher entry
+        if $index then
+            # Matcher exists, add to its hooks if not already there
+            .hooks[$event][$index].hooks as $hooks |
+            if ($hooks | map(.command) | index($command)) then
+                .
+            else
+                .hooks[$event][$index].hooks += [{"type": "command", "command": $command}]
+            end
+        else
+            # Matcher does not exist, add new entry
+            .hooks[$event] += [{
+                "matcher": $matcher,
+                "hooks": [{"type": "command", "command": $command}]
+            }]
+        end
+        ')
+    
+    echo "$UPDATED" > "$CLAUDE_SETTINGS"
 }
 
-# Add SessionStart hooks for different matchers
 echo "📝 Adding SessionStart hooks..."
-add_hook_entry "SessionStart" "startup" "$HOOKS_DIR/session-start-hook"
-add_hook_entry "SessionStart" "resume" "$HOOKS_DIR/session-start-hook"
-add_hook_entry "SessionStart" "clear" "$HOOKS_DIR/session-start-hook"
+add_session_hook "SessionStart" "startup" "$HOOKS_DIR/session-start-hook"
+add_session_hook "SessionStart" "resume" "$HOOKS_DIR/session-start-hook"
+add_session_hook "SessionStart" "clear" "$HOOKS_DIR/session-start-hook"
 
-# Add Stop hook
 echo "📝 Adding Stop hook..."
-add_hook_entry "Stop" "" "$HOOKS_DIR/stop-hook"
+add_session_hook "Stop" "" "$HOOKS_DIR/stop-hook"
 
 # Clean up
 cd -
