@@ -61,8 +61,8 @@ fn run() -> Result<()> {
     .context("Failed to update session configuration")?;
 
     // Display the current session count with newlines before and after for better visibility
-    // The trailing dot prevents Claude from truncating the final newline
-    println!("\n📊 Active sessions: {}\n.", config.count);
+    // The dots prevent Claude from truncating the newlines
+    println!(".\n📊 Active sessions: {}\n.", config.count);
 
     Ok(())
 }
