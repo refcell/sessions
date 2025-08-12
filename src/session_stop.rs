@@ -4,7 +4,7 @@
 //! It operates silently with no output.
 
 use anyhow::{Context, Result};
-use sessions::update_config;
+use sessions_cli::update_config;
 use std::process;
 
 fn main() {

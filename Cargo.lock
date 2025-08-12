@@ -343,7 +343,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sessions"
+name = "sessions-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
