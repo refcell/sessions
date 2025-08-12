@@ -24,14 +24,19 @@ fn count_claude_processes() -> u32 {
         let count = stdout
             .lines()
             .filter(|line| {
-                // Look for Claude processes - adjust these patterns as needed
-                line.contains("claude")
-                    && (line.contains("node")
-                        || line.contains("electron")
-                        || line.contains("Claude"))
-                    && !line.contains("grep")
-                    && !line.contains("session-start")
-                    && !line.contains("session-stop")
+                // Split the line into fields
+                let fields: Vec<&str> = line.split_whitespace().collect();
+                
+                // Check if the command (11th field, index 10) is exactly "claude"
+                // This avoids matching grep, our own hooks, etc.
+                if fields.len() > 10 {
+                    let command = fields[10];
+                    // Match lines where the command is exactly "claude"
+                    // These are the actual Claude Code sessions
+                    command == "claude"
+                } else {
+                    false
+                }
             })
             .count() as u32;
 
@@ -48,15 +53,9 @@ fn run() -> Result<()> {
 
     // Atomically update the session count
     let config = update_config(|config| {
-        // If actual process count differs significantly from stored count, sync it
-        // But always increment by 1 for this new session
-        if config.count == 0 || (actual_processes > 0 && config.count < actual_processes) {
-            // Sync to actual count + 1 (for this new session)
-            config.count = actual_processes + 1;
-        } else {
-            // Normal increment
-            config.increment();
-        }
+        // Always sync to actual count on startup
+        // This handles both increments and cleanup after crashes
+        config.count = actual_processes;
     })
     .context("Failed to update session configuration")?;
 
