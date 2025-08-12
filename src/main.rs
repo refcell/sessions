@@ -5,7 +5,7 @@ use std::process::Command;
 
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
-    
+
     match args.get(1).map(String::as_str) {
         Some("start") => {
             // Run session-start binary
@@ -49,6 +49,6 @@ fn main() -> Result<()> {
             std::process::exit(1);
         }
     }
-    
+
     Ok(())
 }

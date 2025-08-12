@@ -98,6 +98,7 @@ mod tests {
     fn test_count_claude_processes() {
         // This will return 0 or more depending on whether Claude is running
         let count = count_claude_processes();
-        assert!(count >= 0);
+        // Just verify the function runs without panicking
+        let _ = count;
     }
 }
