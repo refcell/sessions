@@ -41,8 +41,8 @@ tar xzf sessions.tar.gz
 # Install hooks to their location
 HOOKS_DIR="$HOME/.claude/hooks"
 mkdir -p "$HOOKS_DIR"
-cp session-start "$HOOKS_DIR/session-start-hook"
-cp session-stop "$HOOKS_DIR/stop-hook"
+cp session-start "$HOOKS_DIR/sessions-hook-start"
+cp session-stop "$HOOKS_DIR/sessions-hook-stop"
 chmod +x "$HOOKS_DIR"/*
 
 # Update Claude settings file
@@ -111,12 +111,12 @@ add_session_hook() {
 }
 
 echo "📝 Adding SessionStart hooks..."
-add_session_hook "SessionStart" "startup" "$HOOKS_DIR/session-start-hook"
-add_session_hook "SessionStart" "resume" "$HOOKS_DIR/session-start-hook"
-add_session_hook "SessionStart" "clear" "$HOOKS_DIR/session-start-hook"
+add_session_hook "SessionStart" "startup" "$HOOKS_DIR/sessions-hook-start"
+add_session_hook "SessionStart" "resume" "$HOOKS_DIR/sessions-hook-start"
+add_session_hook "SessionStart" "clear" "$HOOKS_DIR/sessions-hook-start"
 
 echo "📝 Adding Stop hook..."
-add_session_hook "Stop" "" "$HOOKS_DIR/stop-hook"
+add_session_hook "Stop" "" "$HOOKS_DIR/sessions-hook-stop"
 
 # Clean up
 cd -

@@ -12,43 +12,38 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 if [ -f "$CLAUDE_SETTINGS" ]; then
   echo "📝 Updating Claude settings..."
   if command -v jq &> /dev/null; then
-    # Function to remove a specific hook command
-    remove_hook_command() {
-        local command="$1"
-        
-        jq --arg cmd "$command" '
-        if .hooks then
-          # Process SessionStart hooks
-          if .hooks.SessionStart then
-            .hooks.SessionStart = (.hooks.SessionStart | map(
-              .hooks = (.hooks | map(select(.command != $cmd))) |
-              if .hooks == [] then empty else . end
-            ))
-          else . end |
-          
-          # Process Stop hooks
-          if .hooks.Stop then
-            .hooks.Stop = (.hooks.Stop | map(
-              .hooks = (.hooks | map(select(.command != $cmd))) |
-              if .hooks == [] then empty else . end
-            ))
-          else . end |
-          
-          # Clean up empty arrays
-          if .hooks.SessionStart == [] then del(.hooks.SessionStart) else . end |
-          if .hooks.Stop == [] then del(.hooks.Stop) else . end |
-          
-          # Remove hooks object if empty
-          if .hooks == {} then del(.hooks) else . end
-        else . end
-        ' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
-    }
+    # Remove only sessions-specific hooks
+    jq '
+    if .hooks then
+      # Process SessionStart hooks - remove only sessions-hook-start entries
+      if .hooks.SessionStart then
+        .hooks.SessionStart = [
+          .hooks.SessionStart[] | 
+          .hooks = [.hooks[] | select(.command | contains("sessions-hook-start") | not)] |
+          select(.hooks | length > 0)
+        ]
+      else . end |
+      
+      # Process Stop hooks - remove only sessions-hook-stop entries
+      if .hooks.Stop then
+        .hooks.Stop = [
+          .hooks.Stop[] | 
+          .hooks = [.hooks[] | select(.command | contains("sessions-hook-stop") | not)] |
+          select(.hooks | length > 0)
+        ]
+      else . end |
+      
+      # Clean up empty arrays
+      if .hooks.SessionStart == [] then del(.hooks.SessionStart) else . end |
+      if .hooks.Stop == [] then del(.hooks.Stop) else . end |
+      
+      # Remove hooks object if empty
+      if .hooks == {} then del(.hooks) else . end
+    else . end
+    ' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
     
-    # Remove our specific hook commands
-    remove_hook_command "$HOOKS_DIR/session-start-hook"
-    remove_hook_command "$HOOKS_DIR/stop-hook"
-    
-    echo "✅ Removed session hooks from Claude settings"
+    mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+    echo "✅ Removed sessions hooks from Claude settings"
   else
     echo "⚠️  jq not found. Please manually remove hooks from $CLAUDE_SETTINGS"
   fi
@@ -57,28 +52,16 @@ fi
 # Remove hook files
 REMOVED=0
 
-if [ -f "$HOOKS_DIR/session-start-hook" ]; then
-  # Check if it's our sessions hook
-  if file "$HOOKS_DIR/session-start-hook" | grep -q "ELF\\|Mach-O" || 
-     strings "$HOOKS_DIR/session-start-hook" 2>/dev/null | grep -q "sessions"; then
-    rm -f "$HOOKS_DIR/session-start-hook"
-    echo "✅ Removed session-start-hook"
-    REMOVED=$((REMOVED + 1))
-  else
-    echo "⚠️  session-start-hook exists but doesn't appear to be sessions. Skipping."
-  fi
+if [ -f "$HOOKS_DIR/sessions-hook-start" ]; then
+  rm -f "$HOOKS_DIR/sessions-hook-start"
+  echo "✅ Removed sessions-hook-start"
+  REMOVED=$((REMOVED + 1))
 fi
 
-if [ -f "$HOOKS_DIR/stop-hook" ]; then
-  # Check if it's our sessions hook  
-  if file "$HOOKS_DIR/stop-hook" | grep -q "ELF\\|Mach-O" ||
-     strings "$HOOKS_DIR/stop-hook" 2>/dev/null | grep -q "sessions"; then
-    rm -f "$HOOKS_DIR/stop-hook"
-    echo "✅ Removed stop-hook"
-    REMOVED=$((REMOVED + 1))
-  else
-    echo "⚠️  stop-hook exists but doesn't appear to be sessions. Skipping."
-  fi
+if [ -f "$HOOKS_DIR/sessions-hook-stop" ]; then
+  rm -f "$HOOKS_DIR/sessions-hook-stop"
+  echo "✅ Removed sessions-hook-stop"
+  REMOVED=$((REMOVED + 1))
 fi
 
 # Ask about removing config file
@@ -98,7 +81,7 @@ if [ $REMOVED -eq 0 ]; then
   echo "ℹ️  No sessions hooks found to remove"
 else
   echo ""
-  echo "✅ Session-count hooks uninstalled successfully!"
+  echo "✅ Sessions hooks uninstalled successfully!"
 fi
 
 echo ""

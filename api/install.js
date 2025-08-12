@@ -89,9 +89,9 @@ HOOKS_DIR="$HOME/.claude/hooks"
 mkdir -p "$HOOKS_DIR"
 
 echo "📦 Installing hooks..."
-cp session-start "$HOOKS_DIR/session-start-hook"
-cp session-stop "$HOOKS_DIR/stop-hook"
-chmod +x "$HOOKS_DIR/session-start-hook" "$HOOKS_DIR/stop-hook"
+cp session-start "$HOOKS_DIR/sessions-hook-start"
+cp session-stop "$HOOKS_DIR/sessions-hook-stop"
+chmod +x "$HOOKS_DIR/sessions-hook-start" "$HOOKS_DIR/sessions-hook-stop"
 
 # Update Claude settings file
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
@@ -157,17 +157,17 @@ else
     }
     
     # Add SessionStart hooks for different matchers
-    add_session_hook "SessionStart" "startup" "$HOOKS_DIR/session-start-hook"
-    add_session_hook "SessionStart" "resume" "$HOOKS_DIR/session-start-hook"
-    add_session_hook "SessionStart" "clear" "$HOOKS_DIR/session-start-hook"
+    add_session_hook "SessionStart" "startup" "$HOOKS_DIR/sessions-hook-start"
+    add_session_hook "SessionStart" "resume" "$HOOKS_DIR/sessions-hook-start"
+    add_session_hook "SessionStart" "clear" "$HOOKS_DIR/sessions-hook-start"
     
     # Add Stop hook
-    add_session_hook "Stop" "" "$HOOKS_DIR/stop-hook"
+    add_session_hook "Stop" "" "$HOOKS_DIR/sessions-hook-stop"
 fi
 
 # Test installation
 echo "🧪 Testing installation..."
-if "$HOOKS_DIR/session-start-hook" >/dev/null 2>&1; then
+if "$HOOKS_DIR/sessions-hook-start" >/dev/null 2>&1; then
   echo "✅ Session-count hooks installed successfully!"
   echo ""
   echo "📊 Hooks are now tracking active sessions in ~/.sessions.json"

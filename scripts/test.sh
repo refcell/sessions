@@ -43,10 +43,10 @@ run_test() {
 
 # Check if hooks are installed
 echo "=== Installation Tests ==="
-run_test "Session start hook exists" "[ -f '$HOME/.claude/hooks/session-start-hook' ]" "pass"
-run_test "Stop hook exists" "[ -f '$HOME/.claude/hooks/stop-hook' ]" "pass"
-run_test "Session start hook is executable" "[ -x '$HOME/.claude/hooks/session-start-hook' ]" "pass"
-run_test "Stop hook is executable" "[ -x '$HOME/.claude/hooks/stop-hook' ]" "pass"
+run_test "Sessions start hook exists" "[ -f '$HOME/.claude/hooks/sessions-hook-start' ]" "pass"
+run_test "Sessions stop hook exists" "[ -f '$HOME/.claude/hooks/sessions-hook-stop' ]" "pass"
+run_test "Sessions start hook is executable" "[ -x '$HOME/.claude/hooks/sessions-hook-start' ]" "pass"
+run_test "Sessions stop hook is executable" "[ -x '$HOME/.claude/hooks/sessions-hook-stop' ]" "pass"
 
 # Check Claude settings
 echo ""
@@ -62,9 +62,9 @@ if [ -f "$CLAUDE_SETTINGS" ] && command -v jq &> /dev/null; then
     run_test "SessionStart has startup matcher" \
         "jq -e '.hooks.SessionStart[] | select(.matcher == \"startup\")' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
     run_test "SessionStart startup hook path is correct" \
-        "[ \"\$(jq -r '.hooks.SessionStart[] | select(.matcher == \"startup\") | .hooks[0].command' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/session-start-hook' ]" "pass"
+        "[ \"\$(jq -r '.hooks.SessionStart[] | select(.matcher == \"startup\") | .hooks[0].command' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/sessions-hook-start' ]" "pass"
     run_test "Stop hook path is correct" \
-        "[ \"\$(jq -r '.hooks.Stop[0].hooks[0].command' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/stop-hook' ]" "pass"
+        "[ \"\$(jq -r '.hooks.Stop[0].hooks[0].command' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/sessions-hook-stop' ]" "pass"
 else
     echo -e "${YELLOW}⚠ Skipping settings content tests (jq not found or settings file missing)${NC}"
 fi
@@ -83,14 +83,14 @@ fi
 
 # Test session start hook
 echo "{}" > "$SESSIONS_FILE"  # Start with empty sessions
-"$HOME/.claude/hooks/session-start-hook" 2>/dev/null || true
+"$HOME/.claude/hooks/sessions-hook-start" 2>/dev/null || true
 
 if [ -f "$SESSIONS_FILE" ] && command -v jq &> /dev/null; then
     SESSION_COUNT=$(jq -r '.session_count // 0' "$SESSIONS_FILE" 2>/dev/null || echo "0")
     run_test "Session start hook increments counter" "[ '$SESSION_COUNT' -ge 1 ]" "pass"
     
     # Test stop hook
-    "$HOME/.claude/hooks/stop-hook" 2>/dev/null || true
+    "$HOME/.claude/hooks/sessions-hook-stop" 2>/dev/null || true
     ACTIVE_AFTER_STOP=$(jq -r '.active_sessions // 0' "$SESSIONS_FILE" 2>/dev/null || echo "0")
     run_test "Stop hook decrements active sessions" "[ '$ACTIVE_AFTER_STOP' -eq 0 ]" "pass"
 else
