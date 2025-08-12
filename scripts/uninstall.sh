@@ -3,29 +3,58 @@ set -e
 
 echo "Uninstalling sessions hooks for Claude Code..."
 
-# Remove hooks from Claude settings
+# Define paths
+HOOKS_DIR="$HOME/.claude/hooks"
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 
 if [ -f "$CLAUDE_SETTINGS" ]; then
     # Check if jq is available
     if command -v jq &> /dev/null; then
-        # Remove SessionStart and Stop hooks
-        jq 'del(.hooks.SessionStart) | del(.hooks.Stop)' \
-           "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
+        echo "📝 Removing session hooks from Claude settings..."
         
-        # Check if hooks object is empty and remove it if so
-        jq 'if .hooks == {} then del(.hooks) else . end' \
-           "$CLAUDE_SETTINGS.tmp" > "$CLAUDE_SETTINGS"
+        # Function to remove a specific hook command
+        remove_hook_command() {
+            local command="$1"
+            
+            jq --arg cmd "$command" '
+            if .hooks then
+              # Process SessionStart hooks
+              if .hooks.SessionStart then
+                .hooks.SessionStart = (.hooks.SessionStart | map(
+                  .hooks = (.hooks | map(select(.command != $cmd))) |
+                  if .hooks == [] then empty else . end
+                ))
+              else . end |
+              
+              # Process Stop hooks
+              if .hooks.Stop then
+                .hooks.Stop = (.hooks.Stop | map(
+                  .hooks = (.hooks | map(select(.command != $cmd))) |
+                  if .hooks == [] then empty else . end
+                ))
+              else . end |
+              
+              # Clean up empty arrays
+              if .hooks.SessionStart == [] then del(.hooks.SessionStart) else . end |
+              if .hooks.Stop == [] then del(.hooks.Stop) else . end |
+              
+              # Remove hooks object if empty
+              if .hooks == {} then del(.hooks) else . end
+            else . end
+            ' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+        }
         
-        rm -f "$CLAUDE_SETTINGS.tmp"
-        echo "✅ Removed hooks from Claude settings"
+        # Remove our specific hook commands
+        remove_hook_command "$HOOKS_DIR/session-start-hook"
+        remove_hook_command "$HOOKS_DIR/stop-hook"
+        
+        echo "✅ Removed session hooks from Claude settings"
     else
         echo "⚠️  jq not found. Please manually remove hooks from $CLAUDE_SETTINGS"
     fi
 fi
 
 # Remove hook files
-HOOKS_DIR="$HOME/.claude/hooks"
 if [ -d "$HOOKS_DIR" ]; then
     rm -f "$HOOKS_DIR/session-start-hook"
     rm -f "$HOOKS_DIR/stop-hook"

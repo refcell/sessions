@@ -49,106 +49,68 @@ chmod +x "$HOOKS_DIR"/*
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 mkdir -p "$(dirname "$CLAUDE_SETTINGS")"
 
-# Check if settings file exists and has content
-if [ -f "$CLAUDE_SETTINGS" ] && [ -s "$CLAUDE_SETTINGS" ]; then
-    # Backup existing settings
-    cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
-    
-    # Update settings with new hooks using proper format
-    jq --arg start "$HOOKS_DIR/session-start-hook" \
-       --arg stop "$HOOKS_DIR/stop-hook" \
-       '
-       .hooks.SessionStart = [
-         {
-           "matcher": "startup",
-           "hooks": [
-             {
-               "type": "command",
-               "command": $start
-             }
-           ]
-         },
-         {
-           "matcher": "resume",
-           "hooks": [
-             {
-               "type": "command",
-               "command": $start
-             }
-           ]
-         },
-         {
-           "matcher": "clear",
-           "hooks": [
-             {
-               "type": "command",
-               "command": $start
-             }
-           ]
-         }
-       ] |
-       .hooks.Stop = [
-         {
-           "matcher": "",
-           "hooks": [
-             {
-               "type": "command",
-               "command": $stop
-             }
-           ]
-         }
-       ]' \
-       "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
-    mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
-else
-    # Create new settings file with hooks
-    cat > "$CLAUDE_SETTINGS" <<EOF
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOOKS_DIR/session-start-hook"
-          }
-        ]
-      },
-      {
-        "matcher": "resume",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOOKS_DIR/session-start-hook"
-          }
-        ]
-      },
-      {
-        "matcher": "clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOOKS_DIR/session-start-hook"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$HOOKS_DIR/stop-hook"
-          }
-        ]
-      }
-    ]
-  }
-}
-EOF
+# Check if jq is available
+if ! command -v jq &> /dev/null; then
+    echo "❌ jq is required for safe hook installation. Please install jq first."
+    echo "   On macOS: brew install jq"
+    echo "   On Ubuntu/Debian: sudo apt-get install jq"
+    exit 1
 fi
+
+# Initialize settings file if it doesn't exist
+if [ ! -f "$CLAUDE_SETTINGS" ] || [ ! -s "$CLAUDE_SETTINGS" ]; then
+    echo "{\"hooks\": {}}" > "$CLAUDE_SETTINGS"
+fi
+
+# Backup existing settings
+cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
+
+# Function to add a hook entry (appends to existing hooks)
+add_hook_entry() {
+    local event="$1"
+    local matcher="$2"
+    local command="$3"
+    
+    # Add hook to the appropriate event and matcher
+    jq --arg event "$event" \
+       --arg matcher "$matcher" \
+       --arg command "$command" \
+       '
+       # Ensure hooks object exists
+       .hooks = (.hooks // {}) |
+       
+       # Ensure event array exists
+       .hooks[$event] = (.hooks[$event] // []) |
+       
+       # Find existing matcher entry or create new one
+       (.hooks[$event] | map(.matcher) | index($matcher)) as $idx |
+       if $idx != null then
+         # Matcher exists, append to its hooks if not already present
+         .hooks[$event][$idx].hooks = (
+           .hooks[$event][$idx].hooks | 
+           if map(.command) | index($command) == null then
+             . + [{"type": "command", "command": $command}]
+           else . end
+         )
+       else
+         # Matcher doesn\'t exist, add new entry
+         .hooks[$event] += [{
+           "matcher": $matcher,
+           "hooks": [{"type": "command", "command": $command}]
+         }]
+       end
+       ' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+}
+
+# Add SessionStart hooks for different matchers
+echo "📝 Adding SessionStart hooks..."
+add_hook_entry "SessionStart" "startup" "$HOOKS_DIR/session-start-hook"
+add_hook_entry "SessionStart" "resume" "$HOOKS_DIR/session-start-hook"
+add_hook_entry "SessionStart" "clear" "$HOOKS_DIR/session-start-hook"
+
+# Add Stop hook
+echo "📝 Adding Stop hook..."
+add_hook_entry "Stop" "" "$HOOKS_DIR/stop-hook"
 
 # Clean up
 cd -
