@@ -102,10 +102,50 @@ if command -v jq &> /dev/null; then
     # Backup existing settings
     cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
     
-    # Update settings with new hooks
+    # Update settings with new hooks using proper format
     jq --arg start "$HOOKS_DIR/session-start-hook" \
        --arg stop "$HOOKS_DIR/stop-hook" \
-       '.hooks["session-start-hook"] = $start | .hooks["stop-hook"] = $stop' \
+       '
+       .hooks.SessionStart = [
+         {
+           "matcher": "startup",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $start
+             }
+           ]
+         },
+         {
+           "matcher": "resume",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $start
+             }
+           ]
+         },
+         {
+           "matcher": "clear",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $start
+             }
+           ]
+         }
+       ] |
+       .hooks.Stop = [
+         {
+           "matcher": "",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $stop
+             }
+           ]
+         }
+       ]' \
        "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
     mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
   else
@@ -113,8 +153,46 @@ if command -v jq &> /dev/null; then
     cat > "$CLAUDE_SETTINGS" <<EOF
 {
   "hooks": {
-    "session-start-hook": "$HOOKS_DIR/session-start-hook",
-    "stop-hook": "$HOOKS_DIR/stop-hook"
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/session-start-hook"
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/session-start-hook"
+          }
+        ]
+      },
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/session-start-hook"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/stop-hook"
+          }
+        ]
+      }
+    ]
   }
 }
 EOF

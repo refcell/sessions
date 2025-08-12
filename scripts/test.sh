@@ -55,14 +55,16 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 run_test "Claude settings file exists" "[ -f '$CLAUDE_SETTINGS' ]" "pass"
 
 if [ -f "$CLAUDE_SETTINGS" ] && command -v jq &> /dev/null; then
-    run_test "Settings contains session-start-hook" \
-        "jq -e '.hooks[\"session-start-hook\"]' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
-    run_test "Settings contains stop-hook" \
-        "jq -e '.hooks[\"stop-hook\"]' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
-    run_test "Session-start-hook path is correct" \
-        "[ \"\$(jq -r '.hooks[\"session-start-hook\"]' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/session-start-hook' ]" "pass"
-    run_test "Stop-hook path is correct" \
-        "[ \"\$(jq -r '.hooks[\"stop-hook\"]' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/stop-hook' ]" "pass"
+    run_test "Settings contains SessionStart hooks" \
+        "jq -e '.hooks.SessionStart' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
+    run_test "Settings contains Stop hooks" \
+        "jq -e '.hooks.Stop' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
+    run_test "SessionStart has startup matcher" \
+        "jq -e '.hooks.SessionStart[] | select(.matcher == \"startup\")' '$CLAUDE_SETTINGS' > /dev/null 2>&1" "pass"
+    run_test "SessionStart startup hook path is correct" \
+        "[ \"\$(jq -r '.hooks.SessionStart[] | select(.matcher == \"startup\") | .hooks[0].command' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/session-start-hook' ]" "pass"
+    run_test "Stop hook path is correct" \
+        "[ \"\$(jq -r '.hooks.Stop[0].hooks[0].command' '$CLAUDE_SETTINGS')\" = '$HOME/.claude/hooks/stop-hook' ]" "pass"
 else
     echo -e "${YELLOW}⚠ Skipping settings content tests (jq not found or settings file missing)${NC}"
 fi

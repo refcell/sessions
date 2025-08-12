@@ -12,8 +12,8 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 if [ -f "$CLAUDE_SETTINGS" ]; then
   echo "📝 Updating Claude settings..."
   if command -v jq &> /dev/null; then
-    # Remove hooks from settings
-    jq 'del(.hooks["session-start-hook"]) | del(.hooks["stop-hook"])' \
+    # Remove SessionStart and Stop hooks
+    jq 'del(.hooks.SessionStart) | del(.hooks.Stop)' \
        "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
     
     # Check if hooks object is empty and remove it if so

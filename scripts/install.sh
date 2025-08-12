@@ -38,12 +38,12 @@ cd "$TEMP_DIR"
 curl -L -o sessions.tar.gz "$DOWNLOAD_URL"
 tar xzf sessions.tar.gz
 
-# Install hooks to temporary location first
-TEMP_HOOKS_DIR="$TEMP_DIR/hooks"
-mkdir -p "$TEMP_HOOKS_DIR"
-cp session-start "$TEMP_HOOKS_DIR/session-start-hook"
-cp session-stop "$TEMP_HOOKS_DIR/stop-hook"
-chmod +x "$TEMP_HOOKS_DIR"/*
+# Install hooks to their location
+HOOKS_DIR="$HOME/.claude/hooks"
+mkdir -p "$HOOKS_DIR"
+cp session-start "$HOOKS_DIR/session-start-hook"
+cp session-stop "$HOOKS_DIR/stop-hook"
+chmod +x "$HOOKS_DIR"/*
 
 # Update Claude settings file
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
@@ -54,10 +54,50 @@ if [ -f "$CLAUDE_SETTINGS" ] && [ -s "$CLAUDE_SETTINGS" ]; then
     # Backup existing settings
     cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.backup"
     
-    # Update settings with new hooks
-    jq --arg start "$TEMP_HOOKS_DIR/session-start-hook" \
-       --arg stop "$TEMP_HOOKS_DIR/stop-hook" \
-       '.hooks["session-start-hook"] = $start | .hooks["stop-hook"] = $stop' \
+    # Update settings with new hooks using proper format
+    jq --arg start "$HOOKS_DIR/session-start-hook" \
+       --arg stop "$HOOKS_DIR/stop-hook" \
+       '
+       .hooks.SessionStart = [
+         {
+           "matcher": "startup",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $start
+             }
+           ]
+         },
+         {
+           "matcher": "resume",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $start
+             }
+           ]
+         },
+         {
+           "matcher": "clear",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $start
+             }
+           ]
+         }
+       ] |
+       .hooks.Stop = [
+         {
+           "matcher": "",
+           "hooks": [
+             {
+               "type": "command",
+               "command": $stop
+             }
+           ]
+         }
+       ]' \
        "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
     mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
 else
@@ -65,24 +105,50 @@ else
     cat > "$CLAUDE_SETTINGS" <<EOF
 {
   "hooks": {
-    "session-start-hook": "$TEMP_HOOKS_DIR/session-start-hook",
-    "stop-hook": "$TEMP_HOOKS_DIR/stop-hook"
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/session-start-hook"
+          }
+        ]
+      },
+      {
+        "matcher": "resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/session-start-hook"
+          }
+        ]
+      },
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/session-start-hook"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOOKS_DIR/stop-hook"
+          }
+        ]
+      }
+    ]
   }
 }
 EOF
 fi
-
-# Now copy hooks to their final location
-HOOKS_DIR="$HOME/.claude/hooks"
-mkdir -p "$HOOKS_DIR"
-cp "$TEMP_HOOKS_DIR"/* "$HOOKS_DIR/"
-
-# Update settings file with final paths
-jq --arg start "$HOOKS_DIR/session-start-hook" \
-   --arg stop "$HOOKS_DIR/stop-hook" \
-   '.hooks["session-start-hook"] = $start | .hooks["stop-hook"] = $stop' \
-   "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
-mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
 
 # Clean up
 cd -
