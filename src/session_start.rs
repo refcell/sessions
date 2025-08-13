@@ -59,9 +59,13 @@ fn run() -> Result<()> {
     })
     .context("Failed to update session configuration")?;
 
-    // Display the current session count with newlines before and after for better visibility
-    // The dots prevent Claude from truncating the newlines
-    println!(".\n📊 Active sessions: {}\n.", config.count);
+    // Display the current session count with proper spacing
+    // Using a subtle separator line to force newline preservation
+    println!("─"); // Thin horizontal line as separator to prevent truncation
+    println!("────────────────────────────────"); // Separator line
+    println!("📊 Active sessions: {}", config.count);
+    println!("────────────────────────────────"); // Separator line
+    println!();
 
     Ok(())
 }
