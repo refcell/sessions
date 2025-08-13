@@ -1,6 +1,6 @@
 [package]
 name = "sessions-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Andreas Bigger <andreas@abigger.io>"]
 description = "Session counter hook for Claude Code"
